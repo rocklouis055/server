@@ -7,7 +7,7 @@ d=pd.DataFrame()
 
 def init():
     global d
-    for i in glob.glob("*"):
+    for i in glob.glob("*.csv"):
         print(i)
         d=pd.concat([d,pd.read_csv(i,lineterminator='\n',index_col="Unnamed: 0").transpose()])
 
