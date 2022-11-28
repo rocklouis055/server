@@ -39,6 +39,5 @@ def get_movie():
         return("Wrong ID")
     return jsonify(k)
 
-if __name__ == "__main__":
-    init()
-    app.run()
+init()
+app.run()
