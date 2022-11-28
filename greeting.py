@@ -1,53 +1,43 @@
-from flask import Flask, request, jsonify
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask, jsonify,request
+from time import time
+import pandas as pd
+import glob
+d=pd.DataFrame()
+
+def init():
+    global d
+    for i in glob.glob("*"):
+        print(i)
+        d=pd.concat([d,pd.read_csv(i,lineterminator='\n',index_col="Unnamed: 0").transpose()])
+
+def sensor():
+    print("Scheduler is alive!")
+
+sched = BackgroundScheduler(daemon=True)
+sched.add_job(sensor,'interval',minutes=600)
+sched.start()
+
 app = Flask(__name__)
 
-
-@app.route('/getmsg/', methods=['GET'])
-def respond():
-    # Retrieve the name from the url parameter /getmsg/?name=
-    name = request.args.get("name", None)
-
-    # For debugging
-    print(f"Received: {name}")
-
-    response = {}
-
-    # Check if the user sent a name at all
-    if not name:
-        response["ERROR"] = "No name found. Please send a name."
-    # Check if the user entered a number
-    elif str(name).isdigit():
-        response["ERROR"] = "The name can't be numeric. Please send a string."
+@app.route("/api/movie",methods=['GET'])
+def get_movie():
+    print(request.args)
+    k={}
+    if 'id' in request.args:
+        id = request.args['id']
     else:
-        response["MESSAGE"] = f"Welcome {name} to our awesome API!"
-
-    # Return the response in json format
-    return jsonify(response)
-
-
-@app.route('/post/', methods=['POST'])
-def post_something():
-    param = request.form.get('name')
-    print(param)
-    # You can add the test cases you made in the previous function, but in our case here you are just testing the POST functionality
-    if param:
-        return jsonify({
-            "Message": f"Welcome {name} to our awesome API!",
-            # Add this option to distinct the POST request
-            "METHOD": "POST"
-        })
+        return("Error:No id is there")
+    if id in d.index:
+        k['id']=id
+        k['poster']="https://image.tmdb.org/t/p/original"+d.loc[id]['poster_path']
+        k['title']=d.loc[id]['original_title']
+        k['year']=d.loc[id]['release_date']
+        k['rating']=d.loc[id]['vote_average']
     else:
-        return jsonify({
-            "ERROR": "No name found. Please send a name."
-        })
+        return("Wrong ID")
+    return jsonify(k)
 
-
-@app.route('/')
-def index():
-    # A welcome message to test our server
-    return "<h1>Welcome to our medium-greeting-api!</h1>"
-
-
-if __name__ == '__main__':
-    # Threaded option to enable multiple instances for multiple user access support
-    app.run(threaded=True, port=5000)
+if __name__ == "__main__":
+    init()
+    app.run()
