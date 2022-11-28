@@ -11,7 +11,7 @@ def init():
     for i in glob.glob("*.csv"):
         print(i)
         d=pd.concat([d,pd.read_csv(i,lineterminator='\n',index_col="Unnamed: 0").transpose()])
-
+    print("done")
 # def sensor():
 #     print("Scheduler is alive!")
 
